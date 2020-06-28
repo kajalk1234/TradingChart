@@ -269,8 +269,8 @@ module powerbi.extensibility.visual {
                 .append('svg')
                 .classed('linearSVG', true)
                 .style('overflow', 'visible');
-            
-            
+
+
             this.toolTipInfo = [{ displayName: '', value: '' }];
             this.MARGINS = { top: 10, left: 45, bottom: 40, right: 35 };
             this.ORIGIN_COORD = { x: this.MARGINS.left, y: 480 };
@@ -415,7 +415,7 @@ module powerbi.extensibility.visual {
         }
 
         private createScale(viewModel: IStackViewModel, dateParseFormat: d3.time.Format, ticksCount: number, svgcontainer: d3.Selection<SVGElement>, yearFormat: d3.time.Format, dateFormat: d3.time.Format) {
-            
+
             let maxDate: any = new Date(viewModel.data[0][dateLiteral]);
             let minDate: any = new Date(viewModel.data[0][dateLiteral]);
             let diffDays: number = 0;
@@ -825,112 +825,115 @@ module powerbi.extensibility.visual {
         }
         //Drawing the visual
         // tslint:disable-next-line:cyclomatic-complexity
-        public errorMsg(dataView,options)
-        {
+        public errorMsg(dataView, options) {
             if (dataView.categorical.values === undefined || dataView.categorical.values.length < 4 || dataView.categorical.categories === undefined) {
-                this.chart.style('margin-left','40%');
-                this.chart.style('margin-top',(options.viewport.height/2).toString()+'px');
+                this.chart.style('margin-left', '40%');
+                this.chart.style('margin-top', (options.viewport.height / 2).toString() + 'px');
                 this.svg.append('text').text('Please insert data for all fields')
             }
-            else
-            {
-                this.chart.style('margin-top','10px');
-                this.chart.style('margin-left','0px');
+            else {
+                this.chart.style('margin-top', '10px');
+                this.chart.style('margin-left', '0px');
             }
         }
         public update(options: VisualUpdateOptions): void {
-            this.events.renderingStarted(options);
-            this.svg.select('.svgFrame').remove();
-            this.groupLegends.selectAll('div').remove();
-            this.svg.selectAll('g').remove();
-            this.svg.selectAll('path').remove();
-            this.svg.selectAll('line').remove();
-            this.svg.selectAll('text').remove();
-            let self: this = this;
-            let dataView: DataView = this.dataView = options.dataViews[0];
-            // If columns are not dragged to all fields, display message
-            this.errorMsg(dataView,options);
-            //this.svg.append('text').text(this.missingField(dataView));
-            let viewModel: IStackViewModel; let objects: DataViewObjects;
-            viewModel = this.values = StockChart.CONVERTER(dataView);
-            objects = null; let point: any; point = [];
-            if (dataView && dataView.metadata) { objects = dataView.metadata.objects; }
-            if (objects) { this.stack(objects); }
-            this.errorDiv.selectAll('span').remove();
-            if (viewModel && viewModel.data[0] && viewModel.data[0][dateLiteral]) {
-                this.format(options); this.updateZoom(options);
-                this.createAxis(viewModel, options);
-                const openArray: number[] = []; const closeArray: number[] = []; let arrayIndex: number = 0;
-                if (viewModel && viewModel.data[0]) {
-                    let maxDate: any = new Date(viewModel.data[0][dateLiteral]), minDate: any = new Date(viewModel.data[0][dateLiteral]),days: number = 0; let ratioDayLen: any; let sKeyDataSet: string;
-                    for (sKeyDataSet of Object.keys(viewModel.data)) {
-                        if (viewModel.data.hasOwnProperty(sKeyDataSet)) {
-                            let date: Date; date = new Date(viewModel.data[sKeyDataSet][dateLiteral]);
-                            if (maxDate < date) { maxDate = date; }
-                            if (minDate > date) { minDate = date; }
+            try {
+                this.events.renderingStarted(options);
+                this.svg.select('.svgFrame').remove();
+                this.groupLegends.selectAll('div').remove();
+                this.svg.selectAll('g').remove();
+                this.svg.selectAll('path').remove();
+                this.svg.selectAll('line').remove();
+                this.svg.selectAll('text').remove();
+                let self: this = this;
+                let dataView: DataView = this.dataView = options.dataViews[0];
+                // If columns are not dragged to all fields, display message
+                this.errorMsg(dataView, options);
+                //this.svg.append('text').text(this.missingField(dataView));
+                let viewModel: IStackViewModel; let objects: DataViewObjects;
+                viewModel = this.values = StockChart.CONVERTER(dataView);
+                objects = null; let point: any; point = [];
+                if (dataView && dataView.metadata) { objects = dataView.metadata.objects; }
+                if (objects) { this.stack(objects); }
+                this.errorDiv.selectAll('span').remove();
+                if (viewModel && viewModel.data[0] && viewModel.data[0][dateLiteral]) {
+                    this.format(options); this.updateZoom(options);
+                    this.createAxis(viewModel, options);
+                    const openArray: number[] = []; const closeArray: number[] = []; let arrayIndex: number = 0;
+                    if (viewModel && viewModel.data[0]) {
+                        let maxDate: any = new Date(viewModel.data[0][dateLiteral]), minDate: any = new Date(viewModel.data[0][dateLiteral]), days: number = 0; let ratioDayLen: any; let sKeyDataSet: string;
+                        for (sKeyDataSet of Object.keys(viewModel.data)) {
+                            if (viewModel.data.hasOwnProperty(sKeyDataSet)) {
+                                let date: Date; date = new Date(viewModel.data[sKeyDataSet][dateLiteral]);
+                                if (maxDate < date) { maxDate = date; }
+                                if (minDate > date) { minDate = date; }
+                            }
+                        }
+                        if ((maxDate - minDate) === 0) {
+                            let dateParseFormat: d3.time.Format; dateParseFormat = d3.time.format('%Y-%m-%d');
+                            if (viewModel && viewModel.data[0] && viewModel.IsGrouped) {
+                                maxDate = dateParseFormat.parse(`${(parseInt(viewModel.data[0][dateLiteral].substr('0,4'), 10) + 1)}-01-01`);
+                                minDate = dateParseFormat.parse(`${(parseInt(viewModel.data[0][dateLiteral].substr('0,4'), 10) - 1)}-01-01`);
+                            } else {
+                                minDate = maxDate = dateParseFormat.parse(viewModel.data[0][dateLiteral]);
+                                maxDate = powerbi.extensibility.utils.formatting.dateUtils.addDays(maxDate, 7);
+                                minDate = powerbi.extensibility.utils.formatting.dateUtils.addDays(minDate, -7);
+                            }
+                        }
+                        const increaseDays: number = 50;
+                        days = (maxDate - minDate) / (1000 * 60 * 60 * 24);
+                        ratioDayLen = (this.SVG_SIZE.w - increaseDays) / (days ? days : 1);
+                        let lowestValue: any = d3.min(viewModel.data.map((d: Object): any => { return d[lowLiteral]; }));
+                        let highestValue: any = d3.max(viewModel.data.map((d: Object): any => { return d[highLiteral]; })), difference: number; difference = highestValue - lowestValue;
+                        lowestValue = lowestValue - difference * 0.1;      //0.1 for adding extra 10% vertical space
+                        highestValue = highestValue + difference * 0.1;      //0.1 for adding extra 10% vertical space
+                        lowestValue = lowestValue - (lowestValue % 5);      //rounding off value to nearest multiple of 5
+                        highestValue = highestValue + (5 - (highestValue % 5));       //rounding off value to nearest multiple of 5
+                        let differencePadded: number; differencePadded = highestValue - lowestValue;
+                        const xScale1: d3.scale.Ordinal<string, number> = d3.scale.ordinal()
+                            .domain(viewModel.data.map((d: Object) => d[`date`]))
+                            .rangePoints([0, options.viewport.width - this.MARGINS.left - this.MARGINS.right - 50]);
+                        let sDataKey: string; let barNumber: number;
+                        barNumber = 1; const xValues: number[] = [];
+                        for (sDataKey of Object.keys(viewModel.data)) {
+                            if (viewModel.data.hasOwnProperty(sDataKey)) { this.property(sDataKey, minDate, ratioDayLen, xScale1, differencePadded, xValues, viewModel, openArray, lowestValue, barNumber, arrayIndex, closeArray, point); }
+                            barNumber++;
                         }
                     }
-                    if ((maxDate - minDate) === 0) {
-                        let dateParseFormat: d3.time.Format; dateParseFormat = d3.time.format('%Y-%m-%d');
-                        if (viewModel && viewModel.data[0] && viewModel.IsGrouped) {
-                            maxDate = dateParseFormat.parse(`${(parseInt(viewModel.data[0][dateLiteral].substr('0,4'), 10) + 1)}-01-01`);
-                            minDate = dateParseFormat.parse(`${(parseInt(viewModel.data[0][dateLiteral].substr('0,4'), 10) - 1)}-01-01`);
+                    const length: number = d3.selectAll('.stockValuesClose')[0].length - 1;
+                    d3.selectAll('.stockValuesClose')[0].forEach((ele: any, index: number): void => {
+                        this.label(index, openArray, closeArray);
+                    });
+                    //Trend line
+                    this.trend(point);
+                    if (this.values.hasTrend === false) { this.rootElement.selectAll('.trend_Line').remove(); }
+                    if (this.values.hasXAxis) { this.rootElement.selectAll('g.Stock_xaxis').style('display', 'initial'); }
+                    else { this.rootElement.selectAll('g.Stock_xaxis').style('display', 'none'); }
+                    this.rootElement.selectAll(('g.Stock_yaxis')).style('fill', this.values.yaxisColor);
+                    this.rootElement.selectAll(('g.Stock_xaxis')).style('fill', this.values.xaxisColor);
+                    // Formatting option for y-axis through capabilities
+                    if (this.rootElement.selectAll('g.Stock_yaxis>g.tick') && this.rootElement.selectAll('g.Stock_yaxis>g.tick')[0]) {
+                        if ((this.values && this.values.displayUnits) && this.values.displayUnits > 1) {
+                            let formatter: any; formatter = this.formatter;
+                            this.rootElement.selectAll('g.Stock_yaxis>g.tick>text').each(function (d: any): void { this.textContent = formatter.format(d); });
                         } else {
-                            minDate = maxDate = dateParseFormat.parse(viewModel.data[0][dateLiteral]);
-                            maxDate = powerbi.extensibility.utils.formatting.dateUtils.addDays(maxDate, 7);
-                            minDate = powerbi.extensibility.utils.formatting.dateUtils.addDays(minDate, -7);
+                            let precision: number; precision = this.values.textPrecision;
+                            this.rootElement.selectAll('g.Stock_yaxis>g.tick>text').each(function (d: any): void {
+                                this.textContent = d3.format(`,.${precision}f`)(d);
+                            });
                         }
                     }
-                    const increaseDays: number = 50;
-                    days = (maxDate - minDate) / (1000 * 60 * 60 * 24);
-                    ratioDayLen = (this.SVG_SIZE.w - increaseDays) / (days ? days : 1);
-                    let lowestValue: any = d3.min(viewModel.data.map((d: Object): any => { return d[lowLiteral]; }));
-                    let highestValue: any = d3.max(viewModel.data.map((d: Object): any => { return d[highLiteral]; })), difference: number; difference = highestValue - lowestValue;
-                    lowestValue = lowestValue - difference * 0.1;      //0.1 for adding extra 10% vertical space
-                    highestValue = highestValue + difference * 0.1;      //0.1 for adding extra 10% vertical space
-                    lowestValue = lowestValue - (lowestValue % 5);      //rounding off value to nearest multiple of 5
-                    highestValue = highestValue + (5 - (highestValue % 5));       //rounding off value to nearest multiple of 5
-                    let differencePadded: number; differencePadded = highestValue - lowestValue;
-                    const xScale1: d3.scale.Ordinal<string, number> = d3.scale.ordinal()
-                        .domain(viewModel.data.map((d: Object) => d[`date`]))
-                        .rangePoints([0, options.viewport.width - this.MARGINS.left - this.MARGINS.right - 50]);
-                    let sDataKey: string; let barNumber: number;
-                    barNumber = 1; const xValues: number[] = [];
-                    for (sDataKey of Object.keys(viewModel.data)) {
-                        if (viewModel.data.hasOwnProperty(sDataKey)) { this.property(sDataKey, minDate, ratioDayLen, xScale1, differencePadded, xValues, viewModel, openArray, lowestValue, barNumber, arrayIndex, closeArray, point); }
-                        barNumber++;
-                    }
+                    this.tooltipServiceWrapper.addTooltip(
+                        this.rootElement.selectAll('svg.linearSVG>*'), (tooltipEvent: TooltipEventArgs<number>) => { return tooltipEvent.context['cust-tooltip']; },
+                        (tooltipEvent: TooltipEventArgs<number>) => null, true);
+                    // Y-Axis
+                    this.html();
                 }
-                const length: number = d3.selectAll('.stockValuesClose')[0].length - 1;
-                d3.selectAll('.stockValuesClose')[0].forEach((ele: any, index: number): void => {
-                    this.label(index, openArray, closeArray);
-                });
-                //Trend line
-                this.trend(point);
-                if (this.values.hasTrend === false) { this.rootElement.selectAll('.trend_Line').remove(); }
-                if (this.values.hasXAxis) { this.rootElement.selectAll('g.Stock_xaxis').style('display', 'initial'); }
-                else { this.rootElement.selectAll('g.Stock_xaxis').style('display', 'none'); }
-                this.rootElement.selectAll(('g.Stock_yaxis')).style('fill', this.values.yaxisColor);
-                this.rootElement.selectAll(('g.Stock_xaxis')).style('fill', this.values.xaxisColor);
-                // Formatting option for y-axis through capabilities
-                if (this.rootElement.selectAll('g.Stock_yaxis>g.tick') && this.rootElement.selectAll('g.Stock_yaxis>g.tick')[0]) {
-                    if ((this.values && this.values.displayUnits) && this.values.displayUnits > 1) {
-                        let formatter: any; formatter = this.formatter;
-                        this.rootElement.selectAll('g.Stock_yaxis>g.tick>text').each(function (d: any): void { this.textContent = formatter.format(d); });
-                    } else {
-                        let precision: number; precision = this.values.textPrecision;
-                        this.rootElement.selectAll('g.Stock_yaxis>g.tick>text').each(function (d: any): void {
-                            this.textContent = d3.format(`,.${precision}f`)(d);
-                        });
-                    }
-                }
-                this.tooltipServiceWrapper.addTooltip(
-                    this.rootElement.selectAll('svg.linearSVG>*'), (tooltipEvent: TooltipEventArgs<number>) => { return tooltipEvent.context['cust-tooltip']; },
-                    (tooltipEvent: TooltipEventArgs<number>) => null, true);
-                // Y-Axis
-                this.html();
+                this.events.renderingFinished(options);
             }
-            this.events.renderingFinished(options);
+            catch (exception) {
+                this.events.renderingFailed(options, exception);
+            }
         }
 
         // Make visual properties available in the property pane in Power BI
